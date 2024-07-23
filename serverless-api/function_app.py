@@ -10,7 +10,7 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 
 @app.function_name(name="httpTrigger")
-@app.route(route="articles/{user_id:int?}")
+@app.route(route="users/{user_id:int?}")
 @app.blob_input(
     arg_name="ratingFile",
     path="model-articledata/ratings.pkl",
