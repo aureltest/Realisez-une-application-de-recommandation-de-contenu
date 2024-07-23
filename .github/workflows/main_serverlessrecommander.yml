@@ -33,7 +33,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip --use-pep517
           pip install -r serverless-api/requirements.txt --use-pep517
 
       # Optional: Add step to run tests here
