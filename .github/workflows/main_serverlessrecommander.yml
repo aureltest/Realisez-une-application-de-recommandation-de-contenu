@@ -32,9 +32,7 @@ jobs:
           source venv/bin/activate
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip 
-          pip install -r serverless-api/requirements.txt
+        run: pip install -r serverless-api/requirements.txt
 
       # Optional: Add step to run tests here
 
@@ -70,9 +68,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_E15D11D635DE494CBE13C5A4AE4921FE }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3B49C468C59E44E1892E2DA4B0192691 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_AAFC654EF71E45DC87743B8274207238 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_f743b0ae-67f1-4d2d-9ae2-a7e979c6ae67 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_668f089e-3dc0-48bc-a8b4-b64ce2f6589a }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9518c18c-a2ac-44c5-8530-a9ff0634f9b6 }}
 
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
