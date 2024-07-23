@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'serverless-api/' # set this to the path to your web app project, defaults to the repository root
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
   PYTHON_VERSION: '3.11' # set this to the python version to use (supports 3.6, 3.7, 3.8)
 
 jobs:
@@ -32,9 +32,7 @@ jobs:
           source venv/bin/activate
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip 
-          pip install -r serverless-api/requirements.txt
+        run: pip install -r requirements.txt
 
       # Optional: Add step to run tests here
 
@@ -55,6 +53,8 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-function.outputs.webapp-url }}
+    permissions:
+      id-token: write #This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
@@ -68,9 +68,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_E15D11D635DE494CBE13C5A4AE4921FE }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3B49C468C59E44E1892E2DA4B0192691 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_AAFC654EF71E45DC87743B8274207238 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_89C631B1DCC54031847450E45A5AAD9E }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_825FEC9A8B00453E8773594FDD32E764 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_480BB3C4175E433FBA25F29B7D3CD6E8 }}
 
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
