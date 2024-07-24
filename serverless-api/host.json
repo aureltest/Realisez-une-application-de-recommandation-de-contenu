@@ -4,14 +4,43 @@
         "batchSize": 1000,
         "flushTimeout": "00:00:30"
     },
+    "concurrency": { 
+            "dynamicConcurrencyEnabled": true, 
+            "snapshotPersistenceEnabled": true 
+        },
     "extensions": {
+        "http": {
+            "routePrefix": "api",
+            "maxOutstandingRequests": 200,
+            "maxConcurrentRequests": 100,
+            "dynamicThrottlesEnabled": true
+        },
         "blobs": {
-            "maxDegreeOfParallelism": 4,
-            "poisonBlobThreshold": 1
-        }
+          "maxDegreeOfParallelism": 4,
+          "poisonBlobThreshold": 1
+           }
     },
     "extensionBundle": {
         "id": "Microsoft.Azure.Functions.ExtensionBundle",
         "version": "[4.0.0, 5.0.0)"
+    },
+    "functions": [ "httpTrigger" ],
+    "functionTimeout": "00:05:00",
+    "logging": {
+        "fileLoggingMode": "debugOnly",
+        "logLevel": {
+          "Function.MyFunction": "Information",
+          "default": "None"
+        },
+        "applicationInsights": {
+            "samplingSettings": {
+              "isEnabled": true,
+              "maxTelemetryItemsPerSecond" : 20,
+              "evaluationInterval": "01:00:00"
+            }     
+        }
+    },
+    "managedDependency": {
+        "enabled": true
     }
 }
