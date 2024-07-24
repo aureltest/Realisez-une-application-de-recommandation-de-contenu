@@ -65,6 +65,7 @@ def recommender_function(
         top_recommended = hybrid_recommendation(
             user_id_int, articles_emb, ratings, all_article_ids, svd_model
         )
+
         return func.HttpResponse(
             json.dumps({"recommendations": top_recommended}),
             mimetype="application/json",

@@ -7,7 +7,6 @@ azure-core==1.29.4
 azure-storage-blob==12.19.0        
 numpy==1.26.0
 pandas==2.1.2
+scipy
 scikit-learn==1.3.1
 scikit-surprise
-scipy==1.11.3
-tqdm==4.66.1
