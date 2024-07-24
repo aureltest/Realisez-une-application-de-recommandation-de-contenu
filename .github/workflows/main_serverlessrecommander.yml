@@ -34,8 +34,13 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/requirements.txt --target=".python_packages/lib/site-packages"
+          pip install -r ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/requirements.txt 
 
+      - name: List installed packages
+        run: |
+          source venv/bin/activate
+          pip list
+          
       # Optional: Add step to run tests here
 
       - name: Zip artifact for deployment
@@ -80,7 +85,7 @@ jobs:
         with:
           app-name: 'serverlessrecommander'
           slot-name: 'Production'
-          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          package: 'release.zip'
           scm-do-build-during-deployment: true
           enable-oryx-build: true
           

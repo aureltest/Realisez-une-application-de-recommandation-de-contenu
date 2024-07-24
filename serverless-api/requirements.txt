@@ -5,8 +5,8 @@
 azure-functions
 azure-core              
 azure-storage-blob        
-numpy
 scipy
+numpy
 pandas
 scikit-learn
 scikit-surprise
