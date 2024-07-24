@@ -3,6 +3,7 @@
 # Manually managing azure-functions-worker may cause unexpected issues
 
 azure-functions
+requests
 azure-core             
 azure-storage-blob    
 numpy
