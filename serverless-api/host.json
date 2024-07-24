@@ -29,7 +29,7 @@
     "logging": {
         "fileLoggingMode": "debugOnly",
         "logLevel": {
-          "Function.MyFunction": "Information",
+          "Function.httpTrigger": "Information",
           "default": "None"
         },
         "applicationInsights": {
