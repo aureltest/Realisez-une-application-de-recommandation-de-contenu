@@ -1,3 +1,7 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+# More info on Python, GitHub Actions, and Azure Functions: https://aka.ms/python-webapps-actions
+
 name: Build and deploy Python project to Azure Function App - serverlessrecommander
 
 on:
@@ -7,8 +11,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'serverless-api/' # Set this to the path to your web app project, defaults to the repository root
-  PYTHON_VERSION: '3.11' # Set this to the Python version to use (supports 3.6, 3.7, 3.8, 3.9, 3.10, 3.11)
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'serverless-api/' # set this to the path to your web app project, defaults to the repository root
+  PYTHON_VERSION: '3.11' # set this to the python version to use (supports 3.6, 3.7, 3.8)
 
 jobs:
   build:
@@ -22,26 +26,33 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: 'Resolve Project Dependencies Using Pip'
-        shell: bash
+      - name: Create and start virtual environment
         run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt --target=".python_packages/lib/site-packages"
-          popd
+          python -m venv venv
+          source venv/bin/activate
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/requirements.txt 
 
       - name: List installed packages
         run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          source venv/bin/activate
           pip list
-          popd
 
       # Optional: Add step to run tests here
-      # - name: Run tests
-      #   run: |
-      #     pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-      #     pytest
-      #     popd
+
+      - name: Zip artifact for deployment
+        run: zip -r release.zip ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app
+          path: |
+            release.zip
+            !venv/
 
   deploy:
     runs-on: ubuntu-latest
@@ -50,12 +61,17 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-function.outputs.webapp-url }}
     permissions: 
-      id-token: write # This is required for requesting the JWT
+      id-token: write #This is required for requesting the JWT
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: python-app
 
+      - name: Unzip artifact for deployment
+        run: unzip release.zip     
+        
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -72,3 +88,4 @@ jobs:
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           scm-do-build-during-deployment: true
           enable-oryx-build: true
+          
