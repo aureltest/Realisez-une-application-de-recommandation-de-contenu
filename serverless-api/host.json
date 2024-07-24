@@ -10,6 +10,19 @@
             "snapshotPersistenceEnabled": true 
         },
     "extensions": {
+        "http": {
+            "routePrefix": "api/users",
+            "maxOutstandingRequests": 200,
+            "maxConcurrentRequests": 100,
+            "dynamicThrottlesEnabled": true,
+            "hsts": {
+                "isEnabled": true,
+                "maxAge": "10"
+            },
+            "customHeaders": {
+                "X-Content-Type-Options": "nosniff"
+            }
+        },
         "blobs": {
           "maxDegreeOfParallelism": 4,
           "poisonBlobThreshold": 1
@@ -22,6 +35,7 @@
     "functions": [ "httpTrigger" ],
     "functionTimeout": "00:05:00",
     "healthMonitor": {
+      
         "enabled": true,
         "healthCheckInterval": "00:00:10",
         "healthCheckWindow": "00:02:00",
@@ -48,7 +62,7 @@
               "excludedTypes" : "Dependency;Event",
               "includedTypes" : "PageView;Trace"
             },
-            
+
             "enableLiveMetrics": true,
             "enableDependencyTracking": true,
             "enablePerformanceCountersCollection": true,            
