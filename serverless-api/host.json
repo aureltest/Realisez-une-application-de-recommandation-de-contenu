@@ -5,17 +5,7 @@
         "batchSize": 1000,
         "flushTimeout": "00:00:30"
     },
-    "concurrency": { 
-            "dynamicConcurrencyEnabled": true, 
-            "snapshotPersistenceEnabled": true 
-        },
     "extensions": {
-        "http": {
-            "routePrefix": "",
-            "maxOutstandingRequests": 200,
-            "maxConcurrentRequests": 100,
-            "dynamicThrottlesEnabled": true
-        },
         "blobs": {
           "maxDegreeOfParallelism": 4,
           "poisonBlobThreshold": 1
