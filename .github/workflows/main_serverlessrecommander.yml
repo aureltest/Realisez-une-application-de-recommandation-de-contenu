@@ -11,8 +11,11 @@ env:
   PYTHON_VERSION: '3.10'
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-function.outputs.webapp-url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,57 +25,16 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Create and start virtual environment
+      - name: 'Resolve Project Dependencies Using Pip'
+        shell: bash
         run: |
-          python -m venv venv
-          source venv/bin/activate
+          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt --target=".python_packages/lib/site-packages"
+          popd
 
-      - name: Install dependencies
-        run: |
-          pip install --target="${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/.python_packages/lib/site-packages" -r ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/requirements.txt
-
-      - name: Verify scipy installation
-        run: |
-            python -c "import sys; sys.path.append('${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/.python_packages/lib/site-packages'); import scipy; print(scipy.__version__)"
-
-      # Ajout d'une étape pour lister le contenu du répertoire
       - name: List directory contents
         run: ls -R ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-
-      - name: Zip artifact for deployment
-        run: |
-          cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          zip ../release.zip .python_packages ./* -r
-
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-app
-          path: release.zip
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-function.outputs.webapp-url }}
-    permissions:
-      id-token: write
-      contents: read
-      issues: write
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: python-app
-
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
-
-      # Ajout d'une étape pour lister le contenu après décompression
-      - name: List deployed contents
-        run: ls -R
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -87,7 +49,8 @@ jobs:
         with:
           app-name: 'serverlessrecommander'
           slot-name: 'Production'
-          package: 'release.zip'
+          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           scm-do-build-during-deployment: true
           enable-oryx-build: true
-          
+
+    
