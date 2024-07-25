@@ -29,12 +29,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/requirements.txt 
+          pip install --target="${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/.python_packages/lib/site-packages" -r ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/requirements.txt
 
       - name: Verify scipy installation
         run: |
-          python -c "import scipy; print(scipy.__version__)"
+            python -c "import sys; sys.path.append('${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/.python_packages/lib/site-packages'); import scipy; print(scipy.__version__)"
 
       # Ajout d'une étape pour lister le contenu du répertoire
       - name: List directory contents
@@ -43,7 +42,7 @@ jobs:
       - name: Zip artifact for deployment
         run: |
           cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          zip -r ../release.zip .
+          zip ../release.zip .python_packages ./* -r
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -89,6 +88,6 @@ jobs:
           app-name: 'serverlessrecommander'
           slot-name: 'Production'
           package: 'release.zip'
-          scm-do-build-during-deployment: true
-          enable-oryx-build: true
+          scm-do-build-during-deployment: false
+          enable-oryx-build: false
           
