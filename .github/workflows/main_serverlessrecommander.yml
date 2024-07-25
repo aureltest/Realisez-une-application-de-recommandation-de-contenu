@@ -59,6 +59,8 @@ jobs:
       url: ${{ steps.deploy-to-function.outputs.webapp-url }}
     permissions:
       id-token: write
+      contents: read
+      issues: write
 
     steps:
       - name: Download artifact from build job
@@ -89,9 +91,4 @@ jobs:
           package: 'release.zip'
           scm-do-build-during-deployment: true
           enable-oryx-build: true
-
-      # Ajout d'une étape pour vérifier les logs après le déploiement
-      - name: 'Check Function App Logs'
-        run: |
-          az functionapp log deployment list --name serverlessrecommander --resource-group Recommander-system
           
