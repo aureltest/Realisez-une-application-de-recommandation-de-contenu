@@ -1,4 +1,3 @@
-
 {
     "version": "2.0",
     "aggregator": {
@@ -10,24 +9,12 @@
             "routePrefix": "api",
             "maxOutstandingRequests": 200,
             "maxConcurrentRequests": 100,
-            "dynamicThrottlesEnabled": true,
-            "hsts": {
-                "isEnabled": true,
-                "maxAge": "10"
-            },
-            "customHeaders": {
-                "X-Content-Type-Options": "nosniff"
-            }
+            "dynamicThrottlesEnabled": true
         },
         "blobs": {
           "maxDegreeOfParallelism": 4,
           "poisonBlobThreshold": 1
-           },
-        "durableTask": {},
-        "eventHubs": {},
-        "queues": {},
-        "sendGrid": {},
-        "serviceBus": {}
+           }
     },
     "extensionBundle": {
         "id": "Microsoft.Azure.Functions.ExtensionBundle",
