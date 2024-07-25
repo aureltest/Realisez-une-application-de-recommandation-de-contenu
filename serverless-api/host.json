@@ -6,10 +6,10 @@
     },
     "extensionBundle": {
         "id": "Microsoft.Azure.Functions.ExtensionBundle",
-        "version": "[4.0.0, 5.0.0)"
+        "version": "[3.0.0, 4.0.0)"
     },
     "functions": [ "httpTrigger" ],
-    "functionTimeout": "00:05:00",
+    "functionTimeout": "00:10:00",
     "healthMonitor": {
         "enabled": true,
         "healthCheckInterval": "00:00:10",

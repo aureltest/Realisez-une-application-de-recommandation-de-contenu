@@ -17,19 +17,19 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
     arg_name="ratingFile",
     path="model-articledata/ratings.pkl",
     data_type="binary",
-    connection="STORAGE_CONNECTION_STRING",
+    connection="AzureWebJobsStorage",
 )
 @app.blob_input(
     arg_name="embeddingFile",
     path="model-articledata/articles_embeddings_pca.pkl",
     data_type="binary",
-    connection="STORAGE_CONNECTION_STRING",
+    connection="AzureWebJobsStorage",
 )
 @app.blob_input(
     arg_name="svdModel",
     path="model-articledata/svd++_algo.pkl",
     data_type="binary",
-    connection="STORAGE_CONNECTION_STRING",
+    connection="AzureWebJobsStorage",
 )
 def recommender_function(
     req: func.HttpRequest,
@@ -39,12 +39,6 @@ def recommender_function(
 ) -> func.HttpResponse:
     try:
         logging.info("Function started")
-        logging.info(
-            f"Storage connection string: {os.environ.get('STORAGE_CONNECTION_STRING')[:5]}..."
-        )
-        logging.info(
-            f"Blob input parameters: {ratingFile}, {embeddingFile}, {svdModel}"
-        )
         user_id = req.route_params.get("user_id")
         logging.info(f"Received user_id: {user_id}")
         if not user_id:
