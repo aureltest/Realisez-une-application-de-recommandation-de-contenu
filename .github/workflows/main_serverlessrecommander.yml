@@ -93,4 +93,5 @@ jobs:
       # Ajout d'une étape pour vérifier les logs après le déploiement
       - name: 'Check Function App Logs'
         run: |
-          az functionapp log tail --name serverlessrecommander --resource-group Recommander-system
+          az functionapp log stream --name serverlessrecommander --resource-group Recommander-system
+          
