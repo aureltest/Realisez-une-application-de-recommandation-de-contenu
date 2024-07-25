@@ -1,6 +1,6 @@
-azure-core
-azure-functions
-azure-storage-blob
+azure-core==1.29.4
+azure-functions==1.17.0
+azure-storage-blob==12.19.0
 numpy==1.26.0
 pandas==2.1.2
 scipy==1.11.3
