@@ -6,7 +6,13 @@
     },
     "extensionBundle": {
         "id": "Microsoft.Azure.Functions.ExtensionBundle",
-        "version": "[4.0.0, 5.0.0)"
+        "version": "[3.*, 4.0.0)"
+    },
+    "extensions": {
+        "blobs": {
+            "maxDegreeOfParallelism": 4,
+            "poisonBlobThreshold": 1
+        }
     },
     "functions": [ "httpTrigger" ],
     "functionTimeout": "00:05:00",
@@ -26,27 +32,9 @@
         "applicationInsights": {
             "samplingSettings": {
               "isEnabled": true,
-              "maxTelemetryItemsPerSecond" : 20,
-              "evaluationInterval": "01:00:00",
-              "initialSamplingPercentage": 100.0, 
-              "samplingPercentageIncreaseTimeout" : "00:00:01",
-              "samplingPercentageDecreaseTimeout" : "00:00:01",
-              "minSamplingPercentage": 0.1,
-              "maxSamplingPercentage": 100.0,
-              "movingAverageRatio": 1.0
+              "excludedTypes": "Request"
             }
-        },
-        "dependencyTrackingOptions": {
-                "enableSqlCommandTextInstrumentation": true
-            },
-            "enableLiveMetrics": true,
-            "enableDependencyTracking": true,
-            "enablePerformanceCountersCollection": true,            
-            "httpAutoCollectionOptions": {
-                "enableHttpTriggerExtendedInfoCollection": true,
-                "enableW3CDistributedTracing": true,
-                "enableResponseHeaderInjection": true
-            }
+        }
     },
     "managedDependency": {
         "enabled": true

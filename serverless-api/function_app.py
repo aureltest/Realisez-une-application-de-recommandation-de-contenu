@@ -3,12 +3,10 @@ import logging
 import pickle
 from scipy.spatial import distance
 import numpy as np
-import pandas as pd
-import os
-import json
+import pandas
 
 
-app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
+app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 
 @app.function_name(name="httpTrigger")
@@ -38,13 +36,6 @@ def recommender_function(
     svdModel: func.InputStream,
 ) -> func.HttpResponse:
     try:
-        logging.info("Function started")
-        logging.info(
-            f"Storage connection string: {os.environ.get('STORAGE_CONNECTION_STRING')[:5]}..."
-        )
-        logging.info(
-            f"Blob input parameters: {ratingFile}, {embeddingFile}, {svdModel}"
-        )
         user_id = req.route_params.get("user_id")
         logging.info(f"Received user_id: {user_id}")
         if not user_id:
@@ -66,11 +57,8 @@ def recommender_function(
             user_id_int, articles_emb, ratings, all_article_ids, svd_model
         )
 
-        return func.HttpResponse(
-            json.dumps({"recommendations": top_recommended}),
-            mimetype="application/json",
-            status_code=200,
-        )
+        # Format and return the recommendations
+        return func.HttpResponse(str(top_recommended), status_code=200)
 
     except Exception as e:
         logging.error(f"Error in processing: {str(e)}")
