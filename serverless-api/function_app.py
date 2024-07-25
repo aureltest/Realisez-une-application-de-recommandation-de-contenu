@@ -20,18 +20,18 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
     binding_arg_name="$return",
     methods=[func.HttpMethod.GET],
 )
-@app.blob_input(
-    arg_name="ratingFile",
-    path="model-articledata/ratings.pkl",
-    data_type="binary",
-    connection="AzureWebJobsStorage",
-)
-@app.blob_input(
-    arg_name="embeddingFile",
-    path="model-articledata/articles_embeddings_pca.pkl",
-    data_type="binary",
-    connection="AzureWebJobsStorage",
-)
+# @app.blob_input(
+#     arg_name="ratingFile",
+#     path="model-articledata/ratings.pkl",
+#     data_type="binary",
+#     connection="AzureWebJobsStorage",
+# )
+# @app.blob_input(
+#     arg_name="embeddingFile",
+#     path="model-articledata/articles_embeddings_pca.pkl",
+#     data_type="binary",
+#     connection="AzureWebJobsStorage",
+# )
 @app.blob_input(
     arg_name="svdModel",
     path="model-articledata/svd++_algo.pkl",
@@ -40,8 +40,8 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 )
 def recommender_function(
     req: func.HttpRequest,
-    ratingFile: func.InputStream,
-    embeddingFile: func.InputStream,
+    # ratingFile: func.InputStream,
+    # embeddingFile: func.InputStream,
     svdModel: func.InputStream,
 ) -> func.HttpResponse:
     request_id = str(uuid.uuid4())
@@ -49,29 +49,32 @@ def recommender_function(
     try:
         user_id = req.route_params.get("user_id")
         logging.info(f"Received user_id: {user_id} for request ID: {request_id}")
-        # if not user_id:
-        #     return func.HttpResponse(
-        #         "User ID is required for recommendations", status_code=400
-        #     )
-        # try:
-        #     user_id_int = int(user_id)
-        # except ValueError:
-        #     logging.error(f"Invalid user_id format: {user_id}")
-        #     return func.HttpResponse("Invalid user ID format", status_code=400)
+        if not user_id:
+            return func.HttpResponse(
+                "User ID is required for recommendations", status_code=400
+            )
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            logging.error(f"Invalid user_id format: {user_id}")
+            return func.HttpResponse("Invalid user ID format", status_code=400)
 
         # ratings = load_and_filter_data(ratingFile, user_id_int)
         # articles_emb = load_pickle_file(embeddingFile)
-        # svd_model = load_pickle_file(svdModel)
+        svd_model = load_pickle_file(svdModel)
 
         # all_article_ids = list(range(articles_emb.shape[0]))
+        with open("all_article_ids.pkl", "rb") as f:
+            all_article_ids = pickle.load(f)
+
+        top_recommended = svd_function(user_id, all_article_ids, svd_model, n=5)
+
         # top_recommended = hybrid_recommendation(
         #     user_id_int, articles_emb, ratings, all_article_ids, svd_model
         # )
 
         return func.HttpResponse(
-            # json.dumps({"recommendations": top_recommended}),
-            # mimetype="application/json",
-            body=f"Processed request ID: {request_id} for user_id: {user_id}",
+            body=f"For user_id: {user_id}, recommandations: {top_recommended}",
             status_code=200,
         )
 
