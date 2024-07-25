@@ -88,6 +88,6 @@ jobs:
           app-name: 'serverlessrecommander'
           slot-name: 'Production'
           package: 'release.zip'
-          scm-do-build-during-deployment: false
-          enable-oryx-build: false
+          scm-do-build-during-deployment: true
+          enable-oryx-build: true
           
