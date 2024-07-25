@@ -4,9 +4,32 @@
         "batchSize": 1000,
         "flushTimeout": "00:00:30"
     },
+    "concurrency": { 
+            "dynamicConcurrencyEnabled": true, 
+            "snapshotPersistenceEnabled": true 
+        },
     "extensionBundle": {
         "id": "Microsoft.Azure.Functions.ExtensionBundle",
-        "version": "[3.0.0, 4.0.0)"
+        "version": "[4.0.0, 5.0.0)"
+    },
+    "extensions": {
+        "blobs": {
+            "maxDegreeOfParallelism": 1,
+            "poisonBlobThreshold": 1
+        },
+        "http": {
+            "routePrefix": "api",
+            "maxOutstandingRequests": 2,
+            "maxConcurrentRequests": 1,
+            "dynamicThrottlesEnabled": true,
+            "hsts": {
+                "isEnabled": true,
+                "maxAge": "10"
+            },
+            "customHeaders": {
+                "X-Content-Type-Options": "nosniff"
+            }
+        }
     },
     "functions": [ "httpTrigger" ],
     "functionTimeout": "00:10:00",
