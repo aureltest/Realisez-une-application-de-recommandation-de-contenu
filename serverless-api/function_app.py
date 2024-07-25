@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import os
 import json
-from azure.functions import HttpRequest
 
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
