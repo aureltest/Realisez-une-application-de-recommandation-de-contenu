@@ -6,41 +6,48 @@ import numpy as np
 import pandas as pd
 import os
 import json
+import uuid
 
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 
 @app.function_name(name="httpTrigger")
-@app.route(route="users/{user_id:int?}")
-# @app.blob_input(
-#     arg_name="ratingFile",
-#     path="model-articledata/ratings.pkl",
-#     data_type="binary",
-#     connection="AzureWebJobsStorage",
-# )
-# @app.blob_input(
-#     arg_name="embeddingFile",
-#     path="model-articledata/articles_embeddings_pca.pkl",
-#     data_type="binary",
-#     connection="AzureWebJobsStorage",
-# )
-# @app.blob_input(
-#     arg_name="svdModel",
-#     path="model-articledata/svd++_algo.pkl",
-#     data_type="binary",
-#     connection="AzureWebJobsStorage",
-# )
+@app.route(
+    route="users/{user_id:int?}",
+    trigger_arg_name="req",
+    binding_arg_name="$return",
+    methods=[func.HttpMethod.GET],
+)
+@app.blob_input(
+    arg_name="ratingFile",
+    path="model-articledata/ratings.pkl",
+    data_type="binary",
+    connection="AzureWebJobsStorage",
+)
+@app.blob_input(
+    arg_name="embeddingFile",
+    path="model-articledata/articles_embeddings_pca.pkl",
+    data_type="binary",
+    connection="AzureWebJobsStorage",
+)
+@app.blob_input(
+    arg_name="svdModel",
+    path="model-articledata/svd++_algo.pkl",
+    data_type="binary",
+    connection="AzureWebJobsStorage",
+)
 def recommender_function(
     req: func.HttpRequest,
     # ratingFile: func.InputStream,
     # embeddingFile: func.InputStream,
     # svdModel: func.InputStream,
 ) -> func.HttpResponse:
+    request_id = str(uuid.uuid4())
+    logging.info(f"Function started with request ID: {request_id}")
     try:
-        logging.info("Function started")
         user_id = req.route_params.get("user_id")
-        logging.info(f"Received user_id: {user_id}")
+        logging.info(f"Received user_id: {user_id} for request ID: {request_id}")
         # if not user_id:
         #     return func.HttpResponse(
         #         "User ID is required for recommendations", status_code=400
@@ -63,7 +70,7 @@ def recommender_function(
         return func.HttpResponse(
             # json.dumps({"recommendations": top_recommended}),
             # mimetype="application/json",
-            logging.info(f"Received user_id: {user_id}"),
+            body=f"Processed request ID: {request_id} for user_id: {user_id}",
             status_code=200,
         )
 

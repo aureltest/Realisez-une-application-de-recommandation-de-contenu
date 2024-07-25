@@ -16,19 +16,6 @@
         "blobs": {
             "maxDegreeOfParallelism": 1,
             "poisonBlobThreshold": 1
-        },
-        "http": {
-            "routePrefix": "api",
-            "maxOutstandingRequests": 2,
-            "maxConcurrentRequests": 1,
-            "dynamicThrottlesEnabled": true,
-            "hsts": {
-                "isEnabled": true,
-                "maxAge": "10"
-            },
-            "customHeaders": {
-                "X-Content-Type-Options": "nosniff"
-            }
         }
     },
     "functions": [ "httpTrigger" ],
