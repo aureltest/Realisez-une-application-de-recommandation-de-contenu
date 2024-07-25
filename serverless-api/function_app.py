@@ -20,18 +20,18 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
     binding_arg_name="$return",
     methods=[func.HttpMethod.GET],
 )
-# @app.blob_input(
-#     arg_name="ratingFile",
-#     path="model-articledata/ratings.pkl",
-#     data_type="binary",
-#     connection="AzureWebJobsStorage",
-# )
-# @app.blob_input(
-#     arg_name="embeddingFile",
-#     path="model-articledata/articles_embeddings_pca.pkl",
-#     data_type="binary",
-#     connection="AzureWebJobsStorage",
-# )
+@app.blob_input(
+    arg_name="ratingFile",
+    path="model-articledata/ratings.pkl",
+    data_type="binary",
+    connection="AzureWebJobsStorage",
+)
+@app.blob_input(
+    arg_name="embeddingFile",
+    path="model-articledata/articles_embeddings_pca.pkl",
+    data_type="binary",
+    connection="AzureWebJobsStorage",
+)
 @app.blob_input(
     arg_name="svdModel",
     path="model-articledata/svd++_algo.pkl",
@@ -40,8 +40,8 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 )
 def recommender_function(
     req: func.HttpRequest,
-    # ratingFile: func.InputStream,
-    # embeddingFile: func.InputStream,
+    ratingFile: func.InputStream,
+    embeddingFile: func.InputStream,
     svdModel: func.InputStream,
 ) -> func.HttpResponse:
     request_id = str(uuid.uuid4())
