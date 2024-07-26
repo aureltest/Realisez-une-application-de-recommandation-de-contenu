@@ -7,7 +7,6 @@ import pandas as pd
 import uuid
 import threading
 import os
-from typing import List, Tuple
 
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
@@ -20,8 +19,6 @@ CACHE_FILES = {
 }
 cache_lock = threading.Lock()
 cache = {}
-HYBRID_WEIGHT = 0.5
-DEFAULT_RECOMMENDATION_COUNT = 5
 
 
 def ensure_cache_dir():
@@ -56,8 +53,6 @@ def load_cache(ratingFile, embeddingFile, svdModel):
                     with open(cache_file, "wb") as f:
                         pickle.dump(cache[key], f)
                 logging.info(f"{key.capitalize()} loaded into cache")
-
-    logging.info("All data loaded into cache successfully")
 
 
 @app.function_name(name="httpTrigger")
@@ -155,12 +150,7 @@ def get_weighted_average_embeddings(user_articles, user_click_counts, articles_e
     return weighted_average_embedding
 
 
-def getnArticles(
-    user_id: int,
-    articles_emb: np.ndarray,
-    df_cliks: pd.DataFrame,
-    n: int = DEFAULT_RECOMMENDATION_COUNT,
-) -> List[Tuple[int, float]]:
+def getnArticles(user_id, articles_emb, df_cliks, n=5):
     """
     Retourne une liste de n articles recommandés pour un utilisateur spécifié,
     basée sur la similarité des embeddings des articles pondéré par le nombre de click de l'utilisateur.
@@ -184,7 +174,7 @@ def getnArticles(
     ].tolist()
 
     if not user_articles:
-        logging.info(f"User {user_id} has not read any articles yet!")
+        print(f"User {user_id} has not read any articles yet!")
         return
 
     weighted_average_embedding = get_weighted_average_embeddings(
@@ -230,14 +220,8 @@ def svd_function(user_id, all_article_ids, algo, n=5):
 
 
 def hybrid_recommendation(
-    user_id: int,
-    articles_emb: np.ndarray,
-    df_clicks: pd.DataFrame,
-    all_article_ids: List[int],
-    algo: object,
-    n: int = DEFAULT_RECOMMENDATION_COUNT,
-    w: float = HYBRID_WEIGHT,
-) -> List[Tuple[int, float]]:
+    user_id, articles_emb, df_clicks, all_article_ids, algo, n=5, w=0.5
+):
     """
     Retourne une liste d'articles recommandés basée sur une combinaison linéaire des scores
     de similarité de CBF et SVD++.
