@@ -6,29 +6,58 @@ import numpy as np
 import pandas as pd
 import uuid
 import threading
+import os
+from typing import List, Tuple
 
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-# Variables globales pour le cache
-svd_model_cache = None
-ratings_cache = None
-articles_emb_cache = None
+CACHE_DIR = "/home/cache"
+CACHE_FILES = {
+    "svd_model": "svd_model.pkl",
+    "ratings": "ratings.pkl",
+    "articles_emb": "articles_emb.pkl",
+}
 cache_lock = threading.Lock()
+cache = {}
+HYBRID_WEIGHT = 0.5
+DEFAULT_RECOMMENDATION_COUNT = 5
+
+
+def ensure_cache_dir():
+    os.makedirs(CACHE_DIR, exist_ok=True)
+
+
+def load_pickle_file(file_stream):
+    file_content = file_stream.read()
+    return pickle.loads(file_content)
 
 
 def load_cache(ratingFile, embeddingFile, svdModel):
-    global svd_model_cache, ratings_cache, articles_emb_cache
+    ensure_cache_dir()
+
+    data_sources = {
+        "svd_model": svdModel,
+        "ratings": ratingFile,
+        "articles_emb": embeddingFile,
+    }
+
     with cache_lock:
-        if svd_model_cache is None:
-            svd_model_cache = load_pickle_file(svdModel)
-            logging.info("SVD model loaded into cache")
-        if ratings_cache is None:
-            ratings_cache = load_pickle_file(ratingFile)
-            logging.info("Ratings loaded into cache")
-        if articles_emb_cache is None:
-            articles_emb_cache = load_pickle_file(embeddingFile)
-            logging.info("Article embeddings loaded into cache")
+        for key, blob_source in data_sources.items():
+            if key not in cache:
+                cache_file = os.path.join(CACHE_DIR, CACHE_FILES[key])
+                if os.path.exists(cache_file):
+                    logging.info(f"Loading {key} from cache")
+                    with open(cache_file, "rb") as f:
+                        cache[key] = pickle.load(f)
+                else:
+                    logging.info(f"Loading {key} from blob and caching")
+                    cache[key] = load_pickle_file(blob_source)
+                    with open(cache_file, "wb") as f:
+                        pickle.dump(cache[key], f)
+                logging.info(f"{key.capitalize()} loaded into cache")
+
+    logging.info("All data loaded into cache successfully")
 
 
 @app.function_name(name="httpTrigger")
@@ -66,7 +95,7 @@ def recommender_function(
     try:
         # Chargement du cache si nécessaire
         load_cache(ratingFile, embeddingFile, svdModel)
-        logging.info(f"Model and files loaded and cached")
+        logging.info(f"Model and files loaded from cache")
 
         user_id = req.route_params.get("user_id")
         logging.info(f"Received user_id: {user_id} for request ID: {request_id}")
@@ -80,15 +109,15 @@ def recommender_function(
             logging.error(f"Invalid user_id format: {user_id}")
             return func.HttpResponse("Invalid user ID format", status_code=400)
 
-        filtered_ratings = ratings_cache[ratings_cache["user_id"] == user_id_int]
-        all_article_ids = list(range(articles_emb_cache.shape[0]))
+        filtered_ratings = cache["ratings"][cache["ratings"]["user_id"] == user_id_int]
+        all_article_ids = list(range(cache["articles_emb"].shape[0]))
 
         top_recommended = hybrid_recommendation(
             user_id_int,
-            articles_emb_cache,
+            cache["articles_emb"],
             filtered_ratings,
             all_article_ids,
-            svd_model_cache,
+            cache["svd_model"],
         )
 
         return func.HttpResponse(
@@ -101,17 +130,6 @@ def recommender_function(
         return func.HttpResponse(
             "An error occurred in the recommendation process", status_code=500
         )
-
-
-def load_pickle_file(file_stream):
-    file_content = file_stream.read()
-    return pickle.loads(file_content)
-
-
-def load_and_filter_data(file_stream, user_id):
-    data = load_pickle_file(file_stream)
-    filtered_data = data[data["user_id"] == user_id]
-    return filtered_data
 
 
 def get_weighted_average_embeddings(user_articles, user_click_counts, articles_emb):
@@ -137,7 +155,12 @@ def get_weighted_average_embeddings(user_articles, user_click_counts, articles_e
     return weighted_average_embedding
 
 
-def getnArticles(user_id, articles_emb, df_cliks, n=5):
+def getnArticles(
+    user_id: int,
+    articles_emb: np.ndarray,
+    df_cliks: pd.DataFrame,
+    n: int = DEFAULT_RECOMMENDATION_COUNT,
+) -> List[Tuple[int, float]]:
     """
     Retourne une liste de n articles recommandés pour un utilisateur spécifié,
     basée sur la similarité des embeddings des articles pondéré par le nombre de click de l'utilisateur.
@@ -161,7 +184,7 @@ def getnArticles(user_id, articles_emb, df_cliks, n=5):
     ].tolist()
 
     if not user_articles:
-        print(f"User {user_id} has not read any articles yet!")
+        logging.info(f"User {user_id} has not read any articles yet!")
         return
 
     weighted_average_embedding = get_weighted_average_embeddings(
@@ -207,8 +230,14 @@ def svd_function(user_id, all_article_ids, algo, n=5):
 
 
 def hybrid_recommendation(
-    user_id, articles_emb, df_clicks, all_article_ids, algo, n=5, w=0.5
-):
+    user_id: int,
+    articles_emb: np.ndarray,
+    df_clicks: pd.DataFrame,
+    all_article_ids: List[int],
+    algo: object,
+    n: int = DEFAULT_RECOMMENDATION_COUNT,
+    w: float = HYBRID_WEIGHT,
+) -> List[Tuple[int, float]]:
     """
     Retourne une liste d'articles recommandés basée sur une combinaison linéaire des scores
     de similarité de CBF et SVD++.
@@ -216,11 +245,11 @@ def hybrid_recommendation(
 
     # Obtenir les recommandations de CBF
     cbf_recommendations = getnArticles(user_id, articles_emb, df_clicks)
-    print(f"CBF recommandations : \n {cbf_recommendations}")
+    logging.info(f"CBF recommandations : \n {cbf_recommendations}")
 
     # Obtenir les recommandations de SVD++
     svd_recommendations = svd_function(user_id, all_article_ids, algo, n=10)
-    print(f"SVD++ recommandations : \n {svd_recommendations}")
+    logging.info(f"SVD++ recommandations : \n {svd_recommendations}")
 
     # Créer un dictionnaire pour stocker les scores combinés
     combined_scores = {}
@@ -239,6 +268,6 @@ def hybrid_recommendation(
         combined_scores.items(), key=lambda x: x[1], reverse=True
     )
     top_recommended = recommended_articles[:n]
-    print(f"Hybrid recommandations : \n {top_recommended}")
+    logging.info(f"Hybrid recommandations : \n {top_recommended}")
 
     return top_recommended
