@@ -70,9 +70,10 @@ def recommender_function(
         top_recommended = hybrid_recommendation(
             user_id_int, articles_emb, filtered_ratings, all_article_ids, svd_model
         )
+        article_numbers = [article[0] for article in top_recommended]
 
         return func.HttpResponse(
-            body=f"For user_id: {user_id}, {top_recommended}",
+            body=f"For user_id: {user_id}, Articles : {article_numbers}",
             status_code=200,
         )
 
