@@ -44,17 +44,18 @@ def recommender_function(
     svdModel: func.InputStream,
 ) -> func.HttpResponse:
     try:
+        logging.info("Received User_id")
         user_id = req.route_params.get("user_id")
         if not user_id:
             return func.HttpResponse(
                 "User ID is required for recommendations", status_code=400
             )
 
-        # algo = get_svd_model(svdModel)
-        # top_recommended = svd_function(user_id, ALL_ARTICLES_IDS, algo, n=5)
+        algo = get_svd_model(svdModel)
+        top_recommended = svd_function(user_id, ALL_ARTICLES_IDS, algo, n=5)
 
         return func.HttpResponse(
-            body=f"For user_id: {user_id}",
+            body=f"For user_id: {user_id}, top recommandations : {top_recommended}",
             status_code=200,
         )
     except Exception as e:
