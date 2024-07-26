@@ -11,7 +11,7 @@ permissions:
       contents: read
 
 env:
-  AZURE_WEBAPP_NAME: app # assurez-vous que ce nom correspond exactement à votre application Azure
+  AZURE_WEBAPP_NAME: app-recommander # assurez-vous que ce nom correspond exactement à votre application Azure
   AZURE_WEBAPP_PACKAGE_PATH: 'application' # sans le slash à la fin
 
 jobs:
