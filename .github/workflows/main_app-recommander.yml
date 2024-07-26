@@ -31,19 +31,10 @@ jobs:
       with:
         python-version: 3.x
 
-    - name: List repository contents
-      run: |
-        pwd
-        ls -R
-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/requirements.txt
-
-    - name: List Azure Web Apps
-      run: |
-        az webapp list --query "[].name"
 
     - name: Deploy web App using GH Action azure/webapps-deploy
       uses: azure/webapps-deploy@v3
