@@ -13,6 +13,7 @@ import time
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 with open("all_article_ids.pkl", "rb") as f:
     all_article_ids = pickle.load(f)
+initialization_done = False
 
 
 @app.function_name(name="httpTrigger")
@@ -46,6 +47,7 @@ def recommender_function(
     # embeddingFile: func.InputStream,
     svdModel: func.InputStream,
 ) -> func.HttpResponse:
+    svd_model = load_pickle_file(svdModel)
     request_id = str(uuid.uuid4())
     logging.info(f"Function started with request ID: {request_id}")
     try:
@@ -63,18 +65,17 @@ def recommender_function(
 
         # ratings = load_and_filter_data(ratingFile, user_id_int)
         # articles_emb = load_pickle_file(embeddingFile)
-        svd_model = load_pickle_file(svdModel)
 
         # # all_article_ids = list(range(articles_emb.shape[0]))
 
-        # top_recommended = svd_function(user_id, all_article_ids, svd_model, n=5)
+        top_recommended = svd_function(user_id, all_article_ids, svd_model, n=5)
 
         # top_recommended = hybrid_recommendation(
         #     user_id_int, articles_emb, ratings, all_article_ids, svd_model
         # )
 
         return func.HttpResponse(
-            body=f"For user_id: {user_id}",
+            body=f"For user_id: {user_id}, {top_recommended}",
             status_code=200,
         )
 
