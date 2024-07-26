@@ -1,59 +1,59 @@
-name: Build and deploy Python project to Azure Function App - serverlessrecommander
+# name: Build and deploy Python project to Azure Function App - serverlessrecommander
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - main
+#   workflow_dispatch:
 
-env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'serverless-api/'
-  PYTHON_VERSION: '3.11'
+# env:
+#   AZURE_FUNCTIONAPP_PACKAGE_PATH: 'serverless-api/'
+#   PYTHON_VERSION: '3.11'
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-function.outputs.webapp-url }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+#     permissions:
+#       id-token: write
+#       contents: read
+#     environment:
+#       name: 'Production'
+#       url: ${{ steps.deploy-to-function.outputs.webapp-url }}
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
 
-      - name: Setup Python version
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+#       - name: Setup Python version
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: 'Resolve Project Dependencies Using Pip'
-        shell: bash
-        run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt --target=".python_packages/lib/site-packages"
-          popd
+#       - name: 'Resolve Project Dependencies Using Pip'
+#         shell: bash
+#         run: |
+#           pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+#           python -m pip install --upgrade pip
+#           pip install -r requirements.txt --target=".python_packages/lib/site-packages"
+#           popd
 
-      - name: List directory contents
-        run: ls -R ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+#       - name: List directory contents
+#         run: ls -R ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_C3A0986BE2274A7988502103765C3D5B }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6207FB9604154807BD431485BC591170 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5C9467BC8DAA40DD8706B7C0533FDC2C }}
+#       - name: Login to Azure
+#         uses: azure/login@v2
+#         with:
+#           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_C3A0986BE2274A7988502103765C3D5B }}
+#           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6207FB9604154807BD431485BC591170 }}
+#           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5C9467BC8DAA40DD8706B7C0533FDC2C }}
 
-      - name: 'Deploy to Azure Functions'
-        uses: Azure/functions-action@v1
-        id: deploy-to-function
-        with:
-          app-name: 'serverlessrecommander'
-          slot-name: 'Production'
-          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          scm-do-build-during-deployment: true
-          enable-oryx-build: true
+#       - name: 'Deploy to Azure Functions'
+#         uses: Azure/functions-action@v1
+#         id: deploy-to-function
+#         with:
+#           app-name: 'serverlessrecommander'
+#           slot-name: 'Production'
+#           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+#           scm-do-build-during-deployment: true
+#           enable-oryx-build: true
 
     
