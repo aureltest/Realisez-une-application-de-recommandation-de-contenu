@@ -4,13 +4,55 @@ import pickle
 from scipy.spatial import distance
 import numpy as np
 import pandas as pd
-import os
-import json
 import uuid
-import time
+import threading
+import os
 
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
+
+CACHE_DIR = "/home/cache"
+CACHE_FILES = {
+    "svd_model": "svd_model.pkl",
+    "ratings": "ratings.pkl",
+    "articles_emb": "articles_emb.pkl",
+}
+cache_lock = threading.Lock()
+cache = {}
+
+
+def ensure_cache_dir():
+    os.makedirs(CACHE_DIR, exist_ok=True)
+
+
+def load_pickle_file(file_stream):
+    file_content = file_stream.read()
+    return pickle.loads(file_content)
+
+
+def load_cache(ratingFile, embeddingFile, svdModel):
+    ensure_cache_dir()
+
+    data_sources = {
+        "svd_model": svdModel,
+        "ratings": ratingFile,
+        "articles_emb": embeddingFile,
+    }
+
+    with cache_lock:
+        for key, blob_source in data_sources.items():
+            if key not in cache:
+                cache_file = os.path.join(CACHE_DIR, CACHE_FILES[key])
+                if os.path.exists(cache_file):
+                    logging.info(f"Loading {key} from cache")
+                    with open(cache_file, "rb") as f:
+                        cache[key] = pickle.load(f)
+                else:
+                    logging.info(f"Loading {key} from blob and caching")
+                    cache[key] = load_pickle_file(blob_source)
+                    with open(cache_file, "wb") as f:
+                        pickle.dump(cache[key], f)
+                logging.info(f"{key.capitalize()} loaded into cache")
 
 
 @app.function_name(name="httpTrigger")
@@ -44,10 +86,12 @@ def recommender_function(
     embeddingFile: func.InputStream,
     svdModel: func.InputStream,
 ) -> func.HttpResponse:
-
     request_id = str(uuid.uuid4())
-    logging.info(f"Function started with request ID: {request_id}")
     try:
+        # Chargement du cache si nécessaire
+        load_cache(ratingFile, embeddingFile, svdModel)
+        logging.info(f"Model and files loaded from cache")
+
         user_id = req.route_params.get("user_id")
         logging.info(f"Received user_id: {user_id} for request ID: {request_id}")
         if not user_id:
@@ -60,14 +104,15 @@ def recommender_function(
             logging.error(f"Invalid user_id format: {user_id}")
             return func.HttpResponse("Invalid user ID format", status_code=400)
 
-        svd_model = load_pickle_file(svdModel)
-        filtered_ratings = load_and_filter_data(ratingFile, user_id_int)
-        articles_emb = load_pickle_file(embeddingFile)
-
-        all_article_ids = list(range(articles_emb.shape[0]))
+        filtered_ratings = cache["ratings"][cache["ratings"]["user_id"] == user_id_int]
+        all_article_ids = list(range(cache["articles_emb"].shape[0]))
 
         top_recommended = hybrid_recommendation(
-            user_id_int, articles_emb, filtered_ratings, all_article_ids, svd_model
+            user_id_int,
+            cache["articles_emb"],
+            filtered_ratings,
+            all_article_ids,
+            cache["svd_model"],
         )
 
         return func.HttpResponse(
@@ -80,17 +125,6 @@ def recommender_function(
         return func.HttpResponse(
             "An error occurred in the recommendation process", status_code=500
         )
-
-
-def load_pickle_file(file_stream):
-    file_content = file_stream.read()
-    return pickle.loads(file_content)
-
-
-def load_and_filter_data(file_stream, user_id):
-    data = load_pickle_file(file_stream)
-    filtered_data = data[data["user_id"] == user_id]
-    return filtered_data
 
 
 def get_weighted_average_embeddings(user_articles, user_click_counts, articles_emb):
