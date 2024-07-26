@@ -13,7 +13,6 @@ import time
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 with open("all_article_ids.pkl", "rb") as f:
     all_article_ids = pickle.load(f)
-initialization_done = False
 
 
 @app.function_name(name="httpTrigger")
@@ -48,11 +47,10 @@ def recommender_function(
     svdModel: func.InputStream,
 ) -> func.HttpResponse:
     svd_model = load_pickle_file(svdModel)
-    request_id = str(uuid.uuid4())
-    logging.info(f"Function started with request ID: {request_id}")
+    logging.info(f"SVD Model loaded")
     try:
         user_id = req.route_params.get("user_id")
-        logging.info(f"Received user_id: {user_id} for request ID: {request_id}")
+        logging.info(f"Received user_id: {user_id}")
         if not user_id:
             return func.HttpResponse(
                 "User ID is required for recommendations", status_code=400
