@@ -14,7 +14,7 @@
     },
     "extensions": {
         "blobs": {
-            "maxDegreeOfParallelism": 1,
+            "maxDegreeOfParallelism": 4,
             "poisonBlobThreshold": 1
         }
     },
@@ -22,8 +22,8 @@
     "functionTimeout": "00:10:00",
     "healthMonitor": {
         "enabled": true,
-        "healthCheckInterval": "00:00:10",
-        "healthCheckWindow": "00:02:00",
+        "healthCheckInterval": "00:00:30",
+        "healthCheckWindow": "00:03:00",
         "healthCheckThreshold": 6,
         "counterThreshold": 0.80
     },

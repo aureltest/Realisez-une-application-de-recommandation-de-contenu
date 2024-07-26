@@ -4,9 +4,20 @@ import pickle
 import heapq
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
-
-# Variable globale pour le cache
 svd_model_cache = None
+
+try:
+    with open("all_article_ids.pkl", "rb") as f:
+        ALL_ARTICLES_IDS = pickle.load(f)
+    logging.info("all_article_ids loaded successfully")
+except Exception as e:
+    logging.error(f"Failed to load all_article_ids: {str(e)}")
+    ALL_ARTICLES_IDS = []
+
+
+def load_pickle_file(file_stream):
+    file_content = file_stream.read()
+    return pickle.loads(file_content)
 
 
 def get_svd_model(svdModel):
@@ -20,8 +31,6 @@ def get_svd_model(svdModel):
 @app.function_name(name="httpTrigger")
 @app.route(
     route="users/{user_id:int?}",
-    trigger_arg_name="req",
-    binding_arg_name="$return",
     methods=[func.HttpMethod.GET],
 )
 @app.blob_input(
@@ -42,7 +51,7 @@ def recommender_function(
             )
 
         algo = get_svd_model(svdModel)
-        top_recommended = svd_function(user_id, all_article_ids, algo, n=5)
+        top_recommended = svd_function(user_id, ALL_ARTICLES_IDS, algo, n=5)
 
         return func.HttpResponse(
             body=f"For user_id: {user_id}, {top_recommended}",
@@ -55,11 +64,6 @@ def recommender_function(
         )
 
 
-def load_pickle_file(file_stream):
-    file_content = file_stream.read()
-    return pickle.loads(file_content)
-
-
 def svd_function(user_id, all_article_ids, algo, n=5):
     predictions = [
         (algo.predict(uid=user_id, iid=article_id).est, article_id)
@@ -69,13 +73,3 @@ def svd_function(user_id, all_article_ids, algo, n=5):
     return [
         (article_id, -score) for score, article_id in heapq.nlargest(n, predictions)
     ]
-
-
-# Chargement de all_article_ids
-try:
-    with open("all_article_ids.pkl", "rb") as f:
-        all_article_ids = pickle.load(f)
-    logging.info("all_article_ids loaded successfully")
-except Exception as e:
-    logging.error(f"Failed to load all_article_ids: {str(e)}")
-    all_article_ids = []
