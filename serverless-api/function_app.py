@@ -4,15 +4,6 @@ import pickle
 import heapq
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
-svd_model_cache = None
-
-try:
-    with open("all_article_ids.pkl", "rb") as f:
-        ALL_ARTICLES_IDS = pickle.load(f)
-    logging.info("all_article_ids loaded successfully")
-except Exception as e:
-    logging.error(f"Failed to load all_article_ids: {str(e)}")
-    ALL_ARTICLES_IDS = []
 
 
 def load_pickle_file(file_stream):
@@ -20,19 +11,17 @@ def load_pickle_file(file_stream):
     return pickle.loads(file_content)
 
 
-def get_svd_model(svdModel):
-    global svd_model_cache
-    if svd_model_cache is None:
-        svd_model_cache = load_pickle_file(svdModel)
-        logging.info("SVD Model loaded and cached")
-    return svd_model_cache
+def load_all_article_ids():
+    try:
+        with open("all_article_ids.pkl", "rb") as f:
+            return pickle.load(f)
+    except Exception as e:
+        logging.error(f"Failed to load all_article_ids: {str(e)}")
+        return []
 
 
 @app.function_name(name="httpTrigger")
-@app.route(
-    route="users/{user_id:int?}",
-    methods=[func.HttpMethod.GET],
-)
+@app.route(route="users/{user_id:int?}", methods=[func.HttpMethod.GET])
 @app.blob_input(
     arg_name="svdModel",
     path="model-articledata/svd++_algo.pkl",
@@ -40,22 +29,22 @@ def get_svd_model(svdModel):
     connection="AzureWebJobsStorage",
 )
 def recommender_function(
-    req: func.HttpRequest,
-    svdModel: func.InputStream,
+    req: func.HttpRequest, svdModel: func.InputStream
 ) -> func.HttpResponse:
     try:
-        logging.info("Received User_id")
         user_id = req.route_params.get("user_id")
+        logging.info(f"Received User_id: {user_id}")
         if not user_id:
             return func.HttpResponse(
                 "User ID is required for recommendations", status_code=400
             )
 
-        algo = get_svd_model(svdModel)
-        top_recommended = svd_function(user_id, ALL_ARTICLES_IDS, algo, n=5)
+        algo = load_pickle_file(svdModel)
+        all_article_ids = load_all_article_ids()
+        top_recommended = svd_function(user_id, all_article_ids, algo, n=5)
 
         return func.HttpResponse(
-            body=f"For user_id: {user_id}, top recommandations : {top_recommended}",
+            body=f"For user_id: {user_id}, top recommendations: {top_recommended}",
             status_code=200,
         )
     except Exception as e:
