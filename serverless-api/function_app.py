@@ -50,7 +50,7 @@ def recommender_function(
                 "User ID is required for recommendations", status_code=400
             )
 
-        algo = get_svd_model(svdModel)
+        # algo = get_svd_model(svdModel)
         # top_recommended = svd_function(user_id, ALL_ARTICLES_IDS, algo, n=5)
 
         return func.HttpResponse(
