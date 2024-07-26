@@ -51,10 +51,10 @@ def recommender_function(
             )
 
         algo = get_svd_model(svdModel)
-        top_recommended = svd_function(user_id, ALL_ARTICLES_IDS, algo, n=5)
+        # top_recommended = svd_function(user_id, ALL_ARTICLES_IDS, algo, n=5)
 
         return func.HttpResponse(
-            body=f"For user_id: {user_id}, {top_recommended}",
+            body=f"For user_id: {user_id}",
             status_code=200,
         )
     except Exception as e:
